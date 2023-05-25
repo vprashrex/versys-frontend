@@ -1,0 +1,49 @@
+version: '3'
+services:
+  frontend:
+    image: versys.azurecr.io/frontend 
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    expose:
+      - 3000
+
+    depends_on:
+      - backend
+      - watchtower
+
+  backend:
+    image: versys.azurecr.io/backend
+    build: 
+      context: ./backend
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    expose:
+      - 8000
+
+    depends_on:
+      - watchtower
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30
+
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+
+    ports:
+      - 5000:80
+    
+    depends_on:
+      - frontend
+      - backend
